@@ -1,21 +1,31 @@
 <template>
   <body>
-  <div class="con">
-    <section class="sec">
-      <div>
-      <h1>To-Do List</h1>
-      </div>
-      <div>
-      <img src="https://w7.pngwing.com/pngs/684/254/png-transparent-checklist-todo-list-thumbnail.png" alt="">
-    </div>
-      <input type="text" class="in1" v-model="inputTodo">
-      <button class="but1" @click=" addTodo()">Add</button>
-    </section>
-    <ul v-for="todo in todoList" :key="todo.id">
-      <li v-if="todo!=''">
-        {{ todo }} 
-        <input class="in2" type="checkbox" >
-        <button class="but2" @click="() => deleteTodo(todo)">Delete</button>
+  <div id="app">
+    <h1 id="logo">Todo List</h1>
+    <input class="in1" type="text" v-model="newTodo" placeholder="Add a todo" @keyup.enter="addTodo"/>
+    <button class="but1" @click="addTodo()">Add</button>
+
+    <ul>
+      <li v-for="todo in todos" :key="todo.id">
+        <div v-if="!todo.editing">
+          <span :class="{ completed: todo.completed }">
+            {{ todo.title }}
+          </span>
+          <button class="btn2" @click="editTodo(todo)">Edit</button>
+          <button class="btn3" @click="deleteTodo(todo.id)">Delete</button>
+          <button class="btn4" @click="toggleCompleted(todo)">
+            {{ todo.completed ? "Undo" : "Complete" }}
+          </button>
+        </div>
+        <div v-else>
+          <input class="in2"
+            type="text"
+            v-model="todo.title"
+            @keyup.enter="updateTodo(todo)"
+          />
+          <button class="btn5" @click="updateTodo(todo)">Update</button>
+          <button class="btn6" @click="cancelEdit(todo)">Cancel</button>
+        </div>
       </li>
     </ul>
   </div>
@@ -24,62 +34,77 @@
 
 <script>
 export default {
-  name:'App',
-
+  name: "TodoApp",
   data() {
-    return{
-      inputTodo:'',
-      todoList: [''],
-    }
+    return {
+      newTodo: "",
+      todos: [],
+      nextId: 1,
+    };
   },
   methods: {
     addTodo() {
-      this.todoList.push(this.inputTodo)
-      this.inputTodo = ""
+      const title = this.newTodo.trim();
+      if (title === "") return;
+      this.todos.push({
+        id: this.nextId++,
+        title,
+        completed: false,
+        editing: false,
+      });
+      this.newTodo = "";
     },
-
-    deleteTodo(todo) {
-      const index = this.todoList.indexOf(todo)
-      if (index > -1) {
-        this.todoList.splice(1 , index)
-      }
-    }
-  }
-}
+    deleteTodo(id) {
+      this.todos = this.todos.filter((todo) => todo.id !== id);
+    },
+    editTodo(todo) {
+      todo.editing = true;
+      todo.oldTitle = todo.title;
+    },
+    cancelEdit(todo) {
+      todo.editing = false;
+      todo.title = todo.oldTitle;
+      delete todo.oldTitle;
+    },
+    updateTodo(todo) {
+      if (todo.title.trim() === "") return;
+      todo.editing = false;
+      delete todo.oldTitle;
+    },
+    toggleCompleted(todo) {
+      todo.completed = !todo.completed;
+    },
+  },
+};
 </script>
 
 <style>
-.con{
+body {
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+  animation: gradientAnimation 15s ease infinite;
+  justify-content: center;
+}
+
+@keyframes gradientAnimation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+#app {
   text-align: center;
   position: absolute;
   padding: 30px;
   background-color: transparent;
   border-radius: 10px;
   box-shadow: 0 0 20px rgb(0, 0, 0);
-}
-body {
-  background: linear-gradient(45deg, #1300a0, #6f0e00, #58007e, #d1d57c);
-  background-size: 400% 400%;
-  animation: glowingBackground 10s ease infinite;
-  color: white;
-  font-family: Arial, sans-serif;
-  justify-content: center;
-}
-
-@keyframes glowingBackground {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.glow {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 50px;
-  text-align: center;
-  text-shadow: 0 0 5px #ff3366, 0 0 10px #ff3366, 0 0 15px #ff3366, 0 0 20px #ff3366;
 }
 h1 {
   font-family: cursive;
@@ -88,14 +113,9 @@ h1 {
     display: flex;
     position: absolute;
 }
-img {
-    filter: invert(100%);
-    width: 55px;
-    height: 50px;
-
-}
 .in1 {
-    align-items: center;
+  font-size: large;
+  align-items: center;
     border: 1px solid white;
     background: rgba(204, 204, 204, 0.247);
     box-shadow: 4px 3px 5px rgba(255, 255, 255, 0.298);
@@ -106,9 +126,21 @@ img {
     height: 40px;
     margin-top: 10px;
 }
+ul{
+    font-family:'Courier New', Courier, monospace;
+    font-size: 22px;
+    padding: 0px 8px 3px 20px;
+    user-select: none;
+    cursor: pointer;
+    position: relative;
+    margin: 4px;
+    display: flex;
+    color: white;
+  }
 .but1{
   font-family: cursive;
-  padding: 15px 30px;
+  height: 62px;
+  padding: 15px 42px;
     font-size: 18px;
     color: #000000c0;
     background: rgb(255, 255, 255);
@@ -137,33 +169,144 @@ img {
   .but1:hover {
     color: #000000;
   }
-  ul{
-    font-family:'Courier New', Courier, monospace;
-    font-size: 22px;
-    padding: 0px 8px 3px 20px;
-    user-select: none;
-    cursor: pointer;
-    position: relative;
-    margin: 4px;
-    display: flex;
-    color: white;
-  }
-  .in2{
-  margin-left: 4px;
-  margin-right: 10px;
-  }
-  .but2{
-  font-family: cursive;
-  padding: 4px 8px;
-    font-size: 18px;
-    color: #000000c0;
-    background: rgb(255, 255, 255);
-    border: 2px solid #ffffff;
-    box-shadow: 4px 3px 5px rgba(0, 0, 0, 0.298);
-    border-radius: 30px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
+  .btn2 {
+      background: linear-gradient(45deg,  #d10000, #000000);
+      border: none;
+      border-radius: 50px;
+      color: white;
+      padding: 12px 30px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 15px rgba(240, 101, 149, 0.4);
+      outline: none;
+    } 
+    .btn2:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(240, 101, 149, 0.4);
+    }
+    .btn2:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 15px rgba(240, 101, 149, 0.4);
+    }
+  .btn3 {
+      background: linear-gradient(45deg, #d10000, #000000);
+      border: none;
+      animation: glowingBackground 10s ease infinite;
+      border-radius: 50px;
+      color: white;
+      padding: 12px 30px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 15px rgba(240, 101, 149, 0.4);
+      outline: none;
+    }
+    @keyframes glowingBackground {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
+    .btn3:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(240, 101, 149, 0.4);
+    }
+    .btn3:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 15px rgba(240, 101, 149, 0.4);
+    }
+  .btn4 {
+      background: linear-gradient(45deg, #d10000, #000000);
+      animation: glowingBackground 10s ease infinite;
+      border: none;
+      border-radius: 50px;
+      color: white;
+      padding: 12px 30px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 15px rgba(240, 101, 149, 0.4);
+      outline: none;
+    }
+    @keyframes glowingBackground {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+    .btn4:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(240, 101, 149, 0.4);
+    }
+    .btn4:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 15px rgba(240, 101, 149, 0.4);
+    }
+    .btn5{
+      background: linear-gradient(45deg, #d10000, #000000);
+      border: none;
+      animation: glowingBackground 10s ease infinite;
+      border-radius: 50px;
+      color: white;
+      padding: 12px 30px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 15px rgba(240, 101, 149, 0.4);
+      outline: none;
+    }
+    @keyframes glowingBackground {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.in2{
+  font-size: large;
+  align-items: center;
+    border: 1px solid white;
+    background: rgba(204, 204, 204, 0.247);
+    box-shadow: 4px 3px 5px rgba(255, 255, 255, 0.298);
+    border-radius: 30px;
+    padding-left: 20px;
+    margin-bottom: 25px;
+    width: 530px;
+    height: 40px;
+    margin-top: 10px;
+}
+    .btn5:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(240, 101, 149, 0.4);
+    }
+    .btn5:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 15px rgba(240, 101, 149, 0.4);
+    }
+    .btn6 {
+      background: linear-gradient(45deg, #d10000, #000000);
+      border: none;
+      animation: glowingBackground 10s ease infinite;
+      border-radius: 50px;
+      color: white;
+      padding: 12px 30px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 15px rgba(240, 101, 149, 0.4);
+      outline: none;
+    }
+    @keyframes glowingBackground {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+    .btn6:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(240, 101, 149, 0.4);
+    }
+    .btn6:active{
+      transform: translateY(0);
+      box-shadow: 0 4px 15px rgba(240, 101, 149, 0.4);
+    }
 </style>
+
+
+
