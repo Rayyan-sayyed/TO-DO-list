@@ -80,7 +80,7 @@ export default {
 
 <style>
 body {
-  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background: linear-gradient(-45deg,rgb(148, 35, 0),rgb(125, 0, 0),rgb(0, 6, 126),rgb(0, 0, 0));
   background-size: 400% 400%;
   animation: gradientAnimation 15s ease infinite;
   justify-content: center;
